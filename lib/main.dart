@@ -1,3 +1,4 @@
+import 'package:flash/flash.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -22,7 +23,13 @@ class HomePage extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => FlashPage(),
+                builder: (context) => Overlay(
+                  initialEntries: [
+                    OverlayEntry(
+                      builder: (context) => FlashPage(),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -38,6 +45,8 @@ class FlashPage extends StatefulWidget {
 }
 
 class _FlashPageState extends State<FlashPage> {
+  bool _isToastShown = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,19 +57,112 @@ class _FlashPageState extends State<FlashPage> {
             RaisedButton(
               child: Text('Show Toast'),
               onPressed: () async {
-                // TODO: Show toast
+                if (_isToastShown) {
+                  return;
+                }
+
+                _isToastShown = true;
+
+                await showFlash(
+                  context: context,
+                  duration: const Duration(seconds: 4),
+                  builder: (context, controller) {
+                    return Flash.dialog(
+                      controller: controller,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      backgroundGradient: LinearGradient(
+                        colors: [Colors.indigo, Colors.deepPurple],
+                      ),
+                      alignment: Alignment.bottomCenter,
+                      margin: const EdgeInsets.only(bottom: 48),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'This is a toast',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+
+                _isToastShown = false;
               },
             ),
             RaisedButton(
               child: Text('Show Snackbar'),
               onPressed: () {
-                // TODO: Show snackbar
+                showFlash(
+                  context: context,
+                  duration: const Duration(seconds: 4),
+                  persistent: false,
+                  builder: (context, controller) {
+                    return Flash.bar(
+                      controller: controller,
+                      backgroundGradient: LinearGradient(
+                        colors: [Colors.yellow, Colors.amber],
+                      ),
+                      position: FlashPosition.bottom,
+                      enableDrag: true,
+                      horizontalDismissDirection:
+                          HorizontalDismissDirection.startToEnd,
+                      margin: const EdgeInsets.all(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      forwardAnimationCurve: Curves.easeOutBack,
+                      reverseAnimationCurve: Curves.slowMiddle,
+                      child: FlashBar(
+                        title: Text(
+                          'You are seeing a snackbar!',
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
+                        message: Text('This is something'),
+                        primaryAction: IconButton(
+                          icon: Icon(Icons.ac_unit),
+                          onPressed: () {},
+                        ),
+                        icon: Icon(
+                          Icons.info,
+                          color: Colors.black,
+                        ),
+                        shouldIconPulse: false,
+                        showProgressIndicator: true,
+                      ),
+                    );
+                  },
+                );
               },
             ),
             RaisedButton(
               child: Text('Show Dialog'),
               onPressed: () {
-                // TODO: Show dialog
+                showFlash(
+                  context: context,
+                  // A dialog cannot be persistent - must be poppable.
+                  persistent: false,
+                  builder: (context, controller) {
+                    return Flash.dialog(
+                      controller: controller,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      margin: const EdgeInsets.all(8),
+                      // Again, FlashBar is a perfect candidate for the child widget.
+                      child: FlashBar(
+                        message:
+                            Text('This FlashBar looks like an AlertDialog.'),
+                        actions: [
+                          FlatButton(
+                            onPressed: () {
+                              controller.dismiss();
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ],
